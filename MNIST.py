@@ -4,6 +4,7 @@ import LoadMnist
 import tensorflow as tf
 from tensorflow import keras as ke
 import matplotlib.pyplot as plt
+from matplotlib import pyplot
 from tensorflow.keras.utils import to_categorical
 from tensorflow.keras import layers
 from tensorflow.keras.models import Sequential
@@ -13,18 +14,46 @@ from tensorflow.keras.layers import Dropout
 from tensorflow.keras.layers import Conv1D
 from tensorflow.keras.layers import MaxPooling1D
 from History import HistoryPlotCallback
+from sklearn.preprocessing import StandardScaler
+
+def plot_hist(arr):
+    pyplot.figure()
+    xaxis = None
+    for i in range(arr.shape[1]):
+        ax = pyplot.subplot(arr.shape[1], 1, i + 1, sharex=xaxis)
+        ax.set_xlim(-1, 1)
+        if i == 0:
+            xaxis = ax
+        pyplot.hist(arr[:, i], bins=100)
+    pyplot.show()
+
+
 print("Num GPUs Available: ", len(tf.config.list_physical_devices('GPU')))
 trainX, trainY, testX, testY = LoadMnist.GetData(128, 50000)
 
 print("trainX shape: ", trainX.shape)
 print("trainY shape: ", trainY.shape)
-
 # One hot encoder
 trainY = to_categorical(trainY)
 testY = to_categorical(testY)
 print(trainX.shape, testX.shape, trainY.shape, testY.shape)
 print(trainY[0])
 print(trainY[1])
+# Histograms
+#hist_train = trainX.reshape((trainX.shape[0] * trainX.shape[1], trainX.shape[2])) # Flatten
+#plot_hist(hist_train)
+#Standard Scaling
+flatTrainX = trainX.reshape((trainX.shape[0] * trainX.shape[1], trainX.shape[2]))
+flatTestX = testX.reshape((testX.shape[0] * testX.shape[1], testX.shape[2]))
+
+s = StandardScaler()
+s.fit(flatTrainX)
+flatTrainX = s.transform(flatTrainX)
+flatTrainX = flatTrainX.reshape((trainX.shape))
+trainX = flatTrainX
+flatTestX = s.transform(flatTestX)
+flatTestX = flatTestX.reshape((testX.shape))
+testX = flatTestX
 
 n_timesteps, n_features, n_outputs = trainX.shape[1], trainX.shape[2], trainY.shape[1]
 print("n_timesteps: ", n_timesteps)
